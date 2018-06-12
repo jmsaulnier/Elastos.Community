@@ -10,13 +10,24 @@ const FormItem = Form.Item
 class C extends BaseComponent {
 
     componentDidMount() {
-        debugger
         const taskId = this.props.match.params.taskId
-        this.props.getTaskDetail(taskId)
+        const submissionId = this.props.match.params.submissionId
+
+        if (taskId) {
+            this.props.getTaskDetail(taskId)
+        }
+
+        if (submissionId) {
+            this.props.getSubmissionDetail(submissionId)
+        }
     }
 
     componentWillUnmount() {
-        this.props.resetTaskDetail()
+        const taskId = this.props.match.params.taskId
+        const submissionId = this.props.match.params.submissionId
+
+        taskId && this.props.resetTaskDetail()
+        submissionId && this.props.resetSubmissionDetail()
     }
 
     // only wraps loading / renderMain
