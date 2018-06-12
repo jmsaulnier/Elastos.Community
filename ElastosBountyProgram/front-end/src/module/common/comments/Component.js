@@ -1,12 +1,23 @@
 import React from 'react';
 import BaseComponent from '@/model/BaseComponent'
-import { Col, Row, Icon, Input, Divider, Button, Spin } from 'antd'
-
+import { Form, Col, Row, Icon, Input, Divider, Button, Spin } from 'antd'
 import config from '@/config'
 import './style.scss'
 import store from '@/store';
 
-export default class extends BaseComponent {
+const FormItem = Form.Item
+
+class C extends BaseComponent {
+
+    componentDidMount() {
+        debugger
+        const taskId = this.props.match.params.taskId
+        this.props.getTaskDetail(taskId)
+    }
+
+    componentWillUnmount() {
+        this.props.resetTaskDetail()
+    }
 
     // only wraps loading / renderMain
     ord_render () {
@@ -37,6 +48,21 @@ export default class extends BaseComponent {
         </div>
     }
 
+    getInputProps() {
+        const {getFieldDecorator} = this.props.form
+        const comment_fn = getFieldDecorator('comment', {
+            rules: [{required: true, message: 'Please input your comment!'}],
+            initialValue: ''
+        })
+        const comment_el = (
+            <Input placeholder="What's on your mind?"/>
+        )
+
+        return {
+            comment: comment_fn(comment_el)
+        }
+    }
+
     renderComments() {
         //this.props.type - the type of model
         //take comments from store details
@@ -45,19 +71,22 @@ export default class extends BaseComponent {
         const storeState = store.getState()
         const curDetail = storeState[type] && storeState[type].detail
         const comments = curDetail.comments || []
+        const p = this.getInputProps()
 
         return (
             <div>
                 <Row>
-                    <Col span={20} className="gridCol">
-                        <Input name="comment"/>
-                    </Col>
-                    <Col span={4} className="gridCol">
-                        <Button className="ant-btn-ebp pull-right" type="primary" size="small"
-                            onClick={this.addComment.bind(this)}>
-                            Post
-                        </Button>
-                    </Col>
+                    <Form onSubmit={this.handleSubmit.bind(this)} className="c_commentForm">
+                        <FormItem>
+                            {p.comment}
+                        </FormItem>
+                        <FormItem>
+                            <Button className="ant-btn-ebp pull-right" type="primary" size="small"
+                                htmlType="submit">
+                                Post
+                            </Button>
+                        </FormItem>
+                    </Form>
                 </Row>
                 {
                     _.map(comments, (comment) => {
@@ -74,7 +103,14 @@ export default class extends BaseComponent {
         )
     }
 
-    addComment() {
-        // TODO
+    handleSubmit(e) {
+        e.preventDefault()
+        this.props.form.validateFields((err, values) => {
+            if (!err) {
+                this.props.postComment(this.props.type, this.props.model._id, values.comment)
+            }
+        })
     }
 }
+
+export default Form.create()(C)
